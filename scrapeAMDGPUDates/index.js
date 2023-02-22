@@ -86,6 +86,4 @@
 
         return table;
     }
-
-    // hello from work
 })();
