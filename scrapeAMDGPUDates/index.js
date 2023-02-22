@@ -87,14 +87,5 @@
         return table;
     }
 
-    /** @param {HTMLTableCellElement} */
-    function resolveIndex(row, td) {
-        let ix = -1;
-        let children = [].slice.call(row.children);
-        for (let td_ of children) {
-            ix++;
-            if (td_ === td) return ix;
-        }
-        return -1;
-    }
+    // hello from work
 })();
