@@ -18,15 +18,24 @@
 
     // get the section label and tables for that section
     /** @type {LabeledSection[]} */
-    const labeledSections = sections.reduce((pv, cv)=>{
-        
+    const labeledSections = sections.reduce((pv1, cv1)=>{
+        let arr;
+        cv1.reduce((pv2, cv2)=>{
+            if (cv2.nodeName === 'H3') return pv2.push(arr = [cv2]), pv2;
+
+            // if (arr.length === 2) return pv2;
+            // else if 
+
+            // if an h3 is loaded, load one table
+            // if an h3 and a table are loaded, skip the node
+        }, [arr = []])
 
 
-        pv.push({
-            name: cv[0].children[0].textContent,
-            tables: cv.filter(el=>el.nodeName === 'TABLE')
-        });
-        return pv;
+        // pv.push({
+        //     name: cv[0].children[0].textContent,
+        //     tables: cv.filter(el=>el.nodeName === 'TABLE')
+        // });
+        return pv1;
     }, []);
 
     // get all sections on or after Desktop GPUs
