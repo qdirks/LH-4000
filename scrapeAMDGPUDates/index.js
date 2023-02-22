@@ -25,20 +25,21 @@
 
         // right now, I think I can check if a row contains data by checking for the presence of a td element in the last child position.
         function walkTree(node) {
+            let acc = '';
             if (node.nodeName === 'BR') return ' ';
-            else if (node.nodeType === Node.TEXT_NODE) return node.textContent;
-            else for (var ix = 0, acc = ''; ix < node.childNodes.length; ix++) {
+            else if (node.nodeType === Node.TEXT_NODE) acc = node.textContent;
+            else for (var ix = 0; ix < node.childNodes.length; ix++) {
                 let node_ = node.childNodes[ix];
                 if (node_.nodeName === 'SUP') continue;
                 acc += walkTree(node_);
             }
-            return acc;
+            return acc.trim();
         }
         [].slice.call(table.querySelectorAll("tbody tr")).forEach(row=>{
             if (row.children[row.children.length - 1].nodeName !== 'TD') return; // skip non data row
             const gpu = {
-                name: walkTree(row.children[0]).trim(),
-                date: walkTree(row.children[1]).trim()
+                name: walkTree(row.children[0]),
+                date: walkTree(row.children[1])
             };
             pv.push(gpu);
         });
