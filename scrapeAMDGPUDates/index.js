@@ -21,7 +21,7 @@
     // last 10 for nvidia
     // last 10 for amd
 
-    const gpuList = tables.reverse().slice(0, 10).reverse().reduce((pv, table)=>{
+    const gpuList = tables.reverse().slice().reverse().reduce((pv, table)=>{
 
         table = normalizeTable(table);
 
