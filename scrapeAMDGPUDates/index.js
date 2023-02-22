@@ -8,13 +8,9 @@
         else return pv[pv.length - 1].push(cv), pv;
     }, [[]]);
 
-    console.log(sections);
-
     /** @type {HTMLTableElement[]} */
     const tables = sections.find(section=>section[0].textContent.startsWith("Desktop GPUs"))
     .filter(el=>el.nodeName === 'TABLE');
-
-    console.log(tables);
 
     // let's try going through the tables backwards so that we start with the latest cards
 
