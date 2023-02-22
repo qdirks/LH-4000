@@ -19,6 +19,9 @@
     // get the section label and tables for that section
     /** @type {LabeledSection[]} */
     const labeledSections = sections.reduce((pv, cv)=>{
+        
+
+
         pv.push({
             name: cv[0].children[0].textContent,
             tables: cv.filter(el=>el.nodeName === 'TABLE')
@@ -32,30 +35,45 @@
     const gpuSections = labeledSections.slice(desktopGPUIndex);
 
     // reduce the sections to just the tables that I'm collecting data from
-    const tables = gpuSections.reduce((pv, cv)=>pv.concat(cv.tables), []);
+    const tables = gpuSections.reduce((pv, cv)=>{
+        cv
+
+
+        return pv.concat(cv.tables);
+    }, []);
     console.log("Number of tables:", tables.length);
 
     const gpuList = tables
     // .reverse()
     .slice()
     // .reverse()
-    .reduce((pv, table, ix)=>{
-        try {
+    .reduce((pv, table)=>{
+        // try {
             table = normalizeTable(table);
-        } catch (err) {
-            console.log("table:", ix);
-            throw err;
-        }
+        // } catch (err) {
+        //     console.log("table:", ix);
+        //     throw err;
+        // }
+
+        const rows = [].slice.call(table.querySelector('tbody').children)
+        .filter(tr=>{
+            /** @type {HTMLTableRowElement} */
+            const row = tr;
+            if (row.children[0].classList.contains("table-rh")) return true;
+            else if (row.children[0].nodeName === 'TD') return true;
+            else if (row.children[row.children.length - 1].nodeName === 'TD') return true;
+            else if (row.querySelector('[style="text-align:left;"]')) return true;
+            else if (row.querySelector('[style="text-align:left"]')) return true;
+            else return false;
+        });
 
         // right now, I think I can check if a row contains data by checking for the presence of a td element in the last child position.
-        [].slice.call(table.querySelectorAll("tbody .table-rh")).map(rh=>rh.parentElement)
-        .forEach(row=>row.children[row.children.length - 1].nodeName === 'TD'
-            && pv.push({
-                name: walkTree(row.children[0]).trim().replace(/\s+/g, ' '),
-                date: walkTree(row.children[1]).trim().replace(/\s+/g, ' '),
-                row
-            })
-        );
+        rows.forEach(row=>pv.push({
+            name: walkTree(row.children[0]).trim().replace(/\s+/g, ' '),
+            date: walkTree(row.children[1]).trim().replace(/\s+/g, ' '),
+            row
+        }));
+
         return pv;
     }, []);
 
@@ -83,6 +101,7 @@
             else if (row.children[0].nodeName === 'TD') return true;
             else if (row.children[row.children.length - 1].nodeName === 'TD') return true;
             else if (row.querySelector('[style="text-align:left;"]')) return true;
+            else if (row.querySelector('[style="text-align:left"]')) return true;
             else return false;
         });
         // offsetRow 10, rowIndex 0, tdIndex 19
@@ -94,10 +113,10 @@
                 if (td.rowSpan === 1) continue;
                 let rowSpan = td.rowSpan;
                 td.removeAttribute('rowSpan');
-                for (let offsetRow = 1; offsetRow < rowSpan; offsetRow++) {
-                    let rowInner = rows[rowIndex + offsetRow];
-                    if (tdIndex === 0) rowInner.prepend(td.cloneNode(true));
-                    else rowInner.children[tdIndex - 1].insertAdjacentElement("afterend", td.cloneNode(true));
+                for (let offset = 1; offset < rowSpan; offset++) {
+                    let rowOffset = rows[rowIndex + offset];
+                    if (tdIndex === 0) rowOffset.prepend(td.cloneNode(true));
+                    else rowOffset.children[tdIndex - 1].insertAdjacentElement("afterend", td.cloneNode(true));
                 }
                 rowIndex = rowIndex + rowSpan - 1;
             }
