@@ -51,43 +51,57 @@
 
     console.log("Number of tables:", tables.length);
 
+    class GPU {
+        constructor(model='', launch='', row=null) {
+            this.model = model;
+            this.launch = launch;
+            this.row = row;
+        }
+    }
+
     const gpuList = tables.slice().reduce((pv, table, ix)=>{
         // console.log("table index:", ix); debugger;
         table = normalizeTable(table);
 
-        const body = table.querySelector('tbody');
+        let headerParent = table.querySelector('thead');
+        if (!headerParent) headerParent = table.querySelector('tbody');
 
-        
-        headers = body.children[0]
+        /** @type {HTMLTableCellElement[]} */
+        let headers = [].slice.call(headerParent.children[1]);
+
+        let indexOfModel = headers.findIndex(td=>td.textContent.startsWith("Model"));
+        let indexOfLaunch = headers.findIndex(td=>td.textContent.startsWith("Launch"));
+
+        if (indexOfModel === -1) return pv;
 
         const rows = [].slice.call(body.children).filter(dataRowsOnly);
 
         // right now, I think I can check if a row contains data by checking for the presence of a td element in the last child position.
-        rows.forEach(row=>pv.push({
-            name: walkTree(row.children[0]).trim().replace(/\s+/g, ' '),
-            date: walkTree(row.children[1]).trim().replace(/\s+/g, ' '),
+        rows.forEach(row=>pv.push(new GPU(
+            walkTree(row.children[indexOfModel]).trim().replace(/\s+/g, ' '),
+            indexOfLaunch > -1 ? walkTree(row.children[indexOfLaunch]).trim().replace(/\s+/g, ' ') : '',
             row
-        }));
+        )));
 
         return pv;
     }, []);
 
     window.gpuList = gpuList;
     console.log("Matched these GPUs with date information:", gpuList);
-    console.log("Following GPUs had no launch date:", gpuList.filter(gpu=>!gpu.date));
+    console.log("Following GPUs had no launch date:", gpuList.filter(gpu=>!gpu.Launch));
 
     /** @param {HTMLTableElement} table */
     function normalizeTable(table) {
-        // the first row sets the number of cells
+        // the first row sets the number of cells wide
         const width = [].slice.call(table.querySelector("tr").children).reduce((pv, th)=>{
             if (th.colSpan) return pv += th.colSpan;
             else return pv += 1;
         }, 0);
 
+        // get the rows of the table, without getting the rows of sub tables which has been a source of bugs
         let thead = table.querySelector("thead");
         let tbody = table.querySelector("tbody");
         let tfoot = table.querySelector("tfoot");
-
         /** @type {HTMLTableRowElement[]} */
         let headRows = thead ? [].slice.call(thead.children) : [];
         /** @type {HTMLTableRowElement[]} */
@@ -115,6 +129,7 @@
             });
         })
 
+        // replace td row spans with actual td elements in the actual row that they belong to.
         for (let tdIndex = 0; tdIndex < width; tdIndex++) {
             for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 let rowOuter = rows[rowIndex];
