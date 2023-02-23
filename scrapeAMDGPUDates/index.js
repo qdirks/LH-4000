@@ -51,11 +51,8 @@
 
     console.log("Number of tables:", tables.length);
 
-    const gpuList = tables
-    // .reverse()
-    .slice()
-    // .reverse()
-    .reduce((pv, table)=>{
+    const gpuList = tables.slice().reduce((pv, table, ix)=>{
+        console.log("table index:", ix); // debugger;
         table = normalizeTable(table);
 
         const body = table.querySelector('tbody');
@@ -87,8 +84,18 @@
             else return pv += 1;
         }, 0);
 
+        let thead = table.querySelector("thead");
+        let tbody = table.querySelector("tbody");
+        let tfoot = table.querySelector("tfoot");
+
         /** @type {HTMLTableRowElement[]} */
-        const rows = [].slice.call(table.querySelectorAll('tr'));
+        let headRows = thead ? [].slice.call(thead.children) : [];
+        /** @type {HTMLTableRowElement[]} */
+        let bodyRows = tbody ? [].slice.call(tbody.children) : [];
+        /** @type {HTMLTableRowElement[]} */
+        let footRows = tfoot ? [].slice.call(tfoot.children) : [];
+        /** @type {HTMLTableRowElement[]} */
+        let rows = headRows.concat(bodyRows).concat(footRows);
 
         // make sure column spans are taken out
         /** @type {HTMLTableCellElement[]} */
