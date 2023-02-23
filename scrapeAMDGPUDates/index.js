@@ -52,7 +52,7 @@
     console.log("Number of tables:", tables.length);
 
     const gpuList = tables.slice().reduce((pv, table, ix)=>{
-        console.log("table index:", ix); // debugger;
+        // console.log("table index:", ix); debugger;
         table = normalizeTable(table);
 
         const body = table.querySelector('tbody');
