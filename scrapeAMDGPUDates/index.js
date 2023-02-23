@@ -75,14 +75,12 @@
         let headers = [].slice.call(headerRow.children);
 
         let indexOfModel = headers.findIndex(td=>td.textContent.startsWith("Model"));
-        // if there isn't a model column, then this isn't the type of table that we're looking for
         if (indexOfModel === -1) return pv;
         
         let indexOfLaunch = headers.findIndex(findLaunch);
 
         const rows = [].slice.call(body.children).filter(dataRowsOnly);
 
-        // right now, I think I can check if a row contains data by checking for the presence of a td element in the last child position.
         rows.forEach(row=>pv.push(new GPU(
             walkTree(row.children[indexOfModel]).trim().replace(/\s+/g, ' '),
             indexOfLaunch > -1 ? walkTree(row.children[indexOfLaunch]).trim().replace(/\s+/g, ' ') : '',
