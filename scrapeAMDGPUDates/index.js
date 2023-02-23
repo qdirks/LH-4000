@@ -59,20 +59,26 @@
         }
     }
 
+    /** @type {GPU[]} */
     const gpuList = tables.slice().reduce((pv, table, ix)=>{
         // console.log("table index:", ix); debugger;
         table = normalizeTable(table);
+        const body = table.querySelector('tbody');
 
         let headerParent = table.querySelector('thead');
         if (!headerParent) headerParent = table.querySelector('tbody');
 
+        const headerRow = headerParent.children[1];
+        if (!headerRow) return pv;
+
         /** @type {HTMLTableCellElement[]} */
-        let headers = [].slice.call(headerParent.children[1]);
+        let headers = [].slice.call(headerRow.children);
 
         let indexOfModel = headers.findIndex(td=>td.textContent.startsWith("Model"));
-        let indexOfLaunch = headers.findIndex(td=>td.textContent.startsWith("Launch"));
-
+        // if there isn't a model column, then this isn't the type of table that we're looking for
         if (indexOfModel === -1) return pv;
+        
+        let indexOfLaunch = headers.findIndex(findLaunch);
 
         const rows = [].slice.call(body.children).filter(dataRowsOnly);
 
@@ -87,8 +93,8 @@
     }, []);
 
     window.gpuList = gpuList;
-    console.log("Matched these GPUs with date information:", gpuList);
-    console.log("Following GPUs had no launch date:", gpuList.filter(gpu=>!gpu.Launch));
+    console.log("Matched these GPUs with date information:", gpuList.filter(gpu=>gpu.launch));
+    console.log("Following GPUs had no launch date:", gpuList.filter(gpu=>!gpu.launch));
 
     /** @param {HTMLTableElement} table */
     function normalizeTable(table) {
@@ -133,6 +139,7 @@
         for (let tdIndex = 0; tdIndex < width; tdIndex++) {
             for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 let rowOuter = rows[rowIndex];
+                /** @type {HTMLTableCellElement} */
                 let td = rowOuter.children[tdIndex];
                 if (!td) continue;
                 if (td.rowSpan === 1) continue;
@@ -140,8 +147,11 @@
                 td.removeAttribute('rowSpan');
                 for (let offset = 1; offset < rowSpan; offset++) {
                     let rowOffset = rows[rowIndex + offset];
-                    if (tdIndex === 0) rowOffset.prepend(td.cloneNode(true));
-                    else rowOffset.children[tdIndex - 1].insertAdjacentElement("afterend", td.cloneNode(true));
+                    /** @type {HTMLTableCellElement} */
+                    let clone = td.cloneNode(true);
+                    clone.style.backgroundColor = "#f4b8ff";
+                    if (tdIndex === 0) rowOffset.prepend(clone);
+                    else rowOffset.children[tdIndex - 1].insertAdjacentElement("afterend", clone);
                 }
                 rowIndex = rowIndex + rowSpan - 1;
             }
@@ -170,5 +180,10 @@
         else if (row.querySelector('[style="text-align:left;"]')) return true;
         else if (row.querySelector('[style="text-align:left"]')) return true;
         else return false;
+    }
+    /** @param {HTMLTableCellElement} td*/
+    function findLaunch(td) {
+        if (td.textContent.toLowerCase().startsWith("release")) return true;
+        else if (td.textContent.toLowerCase().startsWith("launch")) return true;
     }
 })();
