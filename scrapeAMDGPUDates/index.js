@@ -9,47 +9,46 @@
         if (cv.nodeName === 'H2') return pv.push([cv]), pv;
         else return pv[pv.length - 1].push(cv), pv;
     }, [[]]);
-    
-    /**
-     * @typedef LabeledSection
-     * @property {string} name
-     * @property {HTMLTableElement[]} tables
-     */
+
+    class LabeledSection {
+        /**
+         * @param {string} label 
+         * @param {HTMLTableElement[]} tables 
+         */
+        constructor(label='', tables=[]) {
+            this.label = label;
+            this.tables = tables;
+        }
+    }
 
     // get the section label and tables for that section
     /** @type {LabeledSection[]} */
-    const labeledSections = sections.reduce((pv1, cv1)=>{
-        let arr;
-        cv1.reduce((pv2, cv2)=>{
-            if (cv2.nodeName === 'H3') return pv2.push(arr = [cv2]), pv2;
-
-            // if (arr.length === 2) return pv2;
-            // else if 
-
-            // if an h3 is loaded, load one table
-            // if an h3 and a table are loaded, skip the node
-        }, [arr = []])
-
-
-        // pv.push({
-        //     name: cv[0].children[0].textContent,
-        //     tables: cv.filter(el=>el.nodeName === 'TABLE')
-        // });
-        return pv1;
+    const labeledSections = sections.reduce((pv, cv)=>{
+        let label = false;
+        let tables = [];
+        cv.forEach(node=>{
+            if (node.nodeName === 'H3') return label = true;
+            if (!label || node.nodeName !== 'TABLE') return;
+            tables.push(node);
+            label = false;
+        });
+        label = cv[0].children[0].textContent;
+        pv.push(new LabeledSection(label, tables));
+        return pv;
     }, []);
 
     // get all sections on or after Desktop GPUs
-    let desktopGPUIndex = labeledSections.findIndex(section=>section.name.startsWith("Desktop GPUs"));
+    let desktopGPUIndex = labeledSections.findIndex(section=>section.label.startsWith("Desktop GPUs"));
     if (desktopGPUIndex === -1) throw Error("Couldn't find Desktop GPUs section index");
     const gpuSections = labeledSections.slice(desktopGPUIndex);
 
     // reduce the sections to just the tables that I'm collecting data from
-    const tables = gpuSections.reduce((pv, cv)=>{
-        cv
+    /** @type {HTMLTableElement[]} */
+    const tables = gpuSections.reduce(
+        (arr, labeledSection)=>(labeledSection.tables.forEach(table=>arr.push(table)), arr),
+        []
+    );
 
-
-        return pv.concat(cv.tables);
-    }, []);
     console.log("Number of tables:", tables.length);
 
     const gpuList = tables
@@ -57,24 +56,10 @@
     .slice()
     // .reverse()
     .reduce((pv, table)=>{
-        // try {
-            table = normalizeTable(table);
-        // } catch (err) {
-        //     console.log("table:", ix);
-        //     throw err;
-        // }
+        table = normalizeTable(table);
 
-        const rows = [].slice.call(table.querySelector('tbody').children)
-        .filter(tr=>{
-            /** @type {HTMLTableRowElement} */
-            const row = tr;
-            if (row.children[0].classList.contains("table-rh")) return true;
-            else if (row.children[0].nodeName === 'TD') return true;
-            else if (row.children[row.children.length - 1].nodeName === 'TD') return true;
-            else if (row.querySelector('[style="text-align:left;"]')) return true;
-            else if (row.querySelector('[style="text-align:left"]')) return true;
-            else return false;
-        });
+        const body = table.querySelector('tbody');
+        const rows = [].slice.call(body.children).filter(dataRowsOnly);
 
         // right now, I think I can check if a row contains data by checking for the presence of a td element in the last child position.
         rows.forEach(row=>pv.push({
@@ -98,21 +83,9 @@
             else return pv += 1;
         }, 0);
 
-
-        // all rows where there is a th at the beginning with class of .table-rh
-        // or there is a td at the beginning
         /** @type {HTMLTableRowElement[]} */
-        const rows = [].slice.call(table.querySelector('tbody').children)
-        .filter(tr=>{
-            /** @type {HTMLTableRowElement} */
-            const row = tr;
-            if (row.children[0].classList.contains("table-rh")) return true;
-            else if (row.children[0].nodeName === 'TD') return true;
-            else if (row.children[row.children.length - 1].nodeName === 'TD') return true;
-            else if (row.querySelector('[style="text-align:left;"]')) return true;
-            else if (row.querySelector('[style="text-align:left"]')) return true;
-            else return false;
-        });
+        const rows = [].slice.call(table.querySelector('tbody').children).filter(dataRowsOnly);
+
         // offsetRow 10, rowIndex 0, tdIndex 19
         for (let tdIndex = 0; tdIndex < width; tdIndex++) {
             for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
@@ -144,5 +117,15 @@
             acc += walkTree(node_);
         }
         return acc;
+    }
+    /** @param {HTMLTableRowElement} tr */
+    function dataRowsOnly(tr) {
+        const row = tr;
+        if (row.children[0].classList.contains("table-rh")) return true;
+        else if (row.children[0].nodeName === 'TD') return true;
+        else if (row.children[row.children.length - 1].nodeName === 'TD') return true;
+        else if (row.querySelector('[style="text-align:left;"]')) return true;
+        else if (row.querySelector('[style="text-align:left"]')) return true;
+        else return false;
     }
 })();
