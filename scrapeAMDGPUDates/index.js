@@ -59,6 +59,10 @@
         table = normalizeTable(table);
 
         const body = table.querySelector('tbody');
+
+        
+        headers = body.children[0]
+
         const rows = [].slice.call(body.children).filter(dataRowsOnly);
 
         // right now, I think I can check if a row contains data by checking for the presence of a td element in the last child position.
@@ -84,9 +88,26 @@
         }, 0);
 
         /** @type {HTMLTableRowElement[]} */
-        const rows = [].slice.call(table.querySelector('tbody').children).filter(dataRowsOnly);
+        const rows = [].slice.call(table.querySelectorAll('tr'));
 
-        // offsetRow 10, rowIndex 0, tdIndex 19
+        // make sure column spans are taken out
+        /** @type {HTMLTableCellElement[]} */
+        rows.forEach(row=>{
+            /** @type {HTMLTableCellElement[]} */
+            const tds = [].slice.call(row.children);
+            tds.forEach(td=>{
+                if (td.colSpan && td.colSpan > 1) {
+                    const colSpan = td.colSpan;
+                    td.removeAttribute('colspan');
+                    for (let ix = 1; ix < colSpan; ix++) {
+                        let td_ = td.cloneNode(true);
+                        td.insertAdjacentElement("afterend", td_);
+                        td = td_;
+                    }
+                }
+            });
+        })
+
         for (let tdIndex = 0; tdIndex < width; tdIndex++) {
             for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 let rowOuter = rows[rowIndex];
